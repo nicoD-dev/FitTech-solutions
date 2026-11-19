@@ -13,9 +13,26 @@ export default function CrearCuenta() {
     const [mensaje, setMensaje] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null)
     const [enviando, setEnviando] = useState(false);
+    // Se define la categoria de peso del atleta
     const [categoria, setCategoria] = useState('');
+    // Variable de mail usado para borrar cuenta
+    const [emailBorrar, setEmailBorrar] = useState('');
 
-    // Se ejecuta al enviar el formmulario (boton de crear cuenta)
+    const eliminarCuenta = async () => {
+        if (!window.confirm(`¿Eliminar la cuenta ${emailBorrar}? Si es atleta, se borran también sus datos y tarjetas.`)) return;
+        setMensaje(null);
+        setError(null);
+        /// rpc() llama a la funcion SQL "eliminar_cuenta" de Supabase
+        const { data, error: error } = await supabase.functions.invoke('eliminar-cuenta', {body: {email: emailBorrar}});
+        if (error || data?.error) {
+        setError(data?.error || error.message);
+        return;
+        }
+        setMensaje(`Cuenta ${emailBorrar} eliminada`);
+        setEmailBorrar('');
+    };
+
+    // Se ejecuta al enviar el formulario (boton de crear cuenta)
     const crear = async (e: FormEvent) =>
     {
         // Previene la funcion default del formulario de recargar pagina
@@ -60,8 +77,9 @@ export default function CrearCuenta() {
         setEnviando(false);
     };
     return (
+        <>
         
-    <form onSubmit={crear} style={{ display: 'flex', flexDirection: 'column', gap: 8, width: 260, marginTop: 24 }}>
+    <form onSubmit={crear} style={{ display: 'flex', flexDirection: 'column', gap: 8, width: 260, marginTop: 18 }}>
         <h3>Crear cuenta</h3>
         {/* "required" y "minLength" hacen que el navegador valide antes de enviar */}
         <input type='email' placeholder='email' value={email} onChange={(e) => setEmail(e.target.value)} required/>
@@ -74,7 +92,7 @@ export default function CrearCuenta() {
             <option value='director'>Director</option>
         </select>
 
-        {/* Solo las cuentas de atleta se vinculan a un registro de la tabla atleta */}
+        {/* Solo las cuentas de atleta se vinculan a un registro de la tabla atletas */}
         {rol === 'atleta' && (
             <>
             {/* Se piden datos de atleta nuevo */}
@@ -90,8 +108,14 @@ export default function CrearCuenta() {
         {/* Mientras "enviando" es true el boton queda desactivado y cambia su texto */}
         {enviando ? ' Creando...': 'Crear cuenta'}
         </button>
-        {mensaje && <p style={{color: 'green'}}>{mensaje}</p>}
-        {error && <p style={{color: 'red'}}>{error}</p>}
+        {mensaje && <p style={{color: 'green', margin: 2}}>{mensaje}</p>}
+        {error && <p style={{color: 'red', margin: 2}}>{error}</p>}
     </form>
+    {/* Eliminar cuenta por email. La base rechaza a quien no sea director */}
+    <div style={{ display: 'flex', gap: 8, marginTop: 5 }}>
+        <input type='email' placeholder='email a eliminar' value={emailBorrar} onChange={(e) => setEmailBorrar(e.target.value)} />
+        <button onClick={eliminarCuenta} disabled={!emailBorrar}>Eliminar cuenta</button>
+    </div>
+    </>
     );    
 }

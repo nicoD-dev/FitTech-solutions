@@ -128,6 +128,23 @@ export default function kanban({rol, idAtletaPropio}: Props) {
       setNuevoTipo('tecnica');
     };
 
+    // ELiminar tarjetas seleccionadas
+    const eliminarTarjeta = async () => {
+      if (!tarjetaSelect) return;
+    // Pide confirmacion antes de borrar
+    if (!window.confirm(`¿Eliminar la tarjeta "${tarjetaSelect?.titulo}"?`)) return;
+
+    // select devuelve la fila borrada. Si es vacio no se elimino nada 
+    const {data, error} = await supabase.from(TABLA_TARJETAS).delete().eq('id_tarjeta', tarjetaSelect?.id_tarjeta).select();
+
+    if (error) {setErrorForm(error.message); return;}
+    if (!data || data.length===0) {setErrorForm('No se pudo eliminar'); return;}
+
+    //se saca de la lista local y deselecciona
+    setTarjetas((prev) => prev.filter((t) => t.id_tarjeta !== tarjetaSelect?.id_tarjeta));
+    setSelected(null);
+  };
+
 
 
 {/*Diseño de tarjetas */}
@@ -208,7 +225,12 @@ return (
       <button onClick= {() => move(1)} disabled={!tarjetaSelect || indexSelect === COLUMNS.length -1}>
         Avanzar {'-->'}
       </button>
-      
+      {/* Solo entrenador y director pueden eliminar tarjetas */}
+      {puedeCrear && (
+        <button style={{marginLeft:10}} onClick={eliminarTarjeta} disabled={!tarjetaSelect}>
+          Eliminar tarjeta
+        </button>
+      )}
       {/* Muestra tarjeta seleccionada, o le dice al usuario que seleccione una*/}
       <span style={{ marginLeft: 12 }}>
       {tarjetaSelect ? `Seleccionada: ${tarjetaSelect.titulo}` : 'Elegí una tarea'}

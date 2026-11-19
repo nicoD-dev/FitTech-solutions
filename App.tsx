@@ -20,9 +20,9 @@ export default function App() {
   }
 
   return (
-    <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', width: '100vw',}}>
+    <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', width: '100vw'}}>
       <h1>FitTech</h1>
-      <p>
+      <p style={{margin:0}}>
         {session.user.email} · {perfil.rol}{' '}
         <button onClick={() => supabase.auth.signOut()}>Salir</button>
       </p>
